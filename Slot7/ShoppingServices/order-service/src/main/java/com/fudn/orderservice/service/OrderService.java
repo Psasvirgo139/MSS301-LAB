@@ -24,7 +24,7 @@ public class OrderService {
                 orderRequest.quantity());
 
         if (inStock) {
-            var order = mapToOrder(orderRequest);
+            Order order = mapToOrder(orderRequest);
             orderRepository.save(order);
         } else {
             throw new RuntimeException(
