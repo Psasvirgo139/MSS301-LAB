@@ -11,6 +11,9 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.testcontainers.containers.MySQLContainer;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -56,5 +59,28 @@ class OrderServiceApplicationTests {
                 .extract().body().asString();
 
         assertThat(responseBodyString, Matchers.is("Order Placed Successfully"));
+        verify(getRequestedFor(urlEqualTo("/api/inventory?skuCode=iphone_15&quantity=1")));
+    }
+
+    @Test
+    void shouldFailOrderWhenProductIsNotInStock() {
+        String submitOrderJson = """
+                {
+                     "skuCode": "iphone_15",
+                     "price": 1000,
+                     "quantity": 1000
+                }
+                """;
+
+        InventoryStubs.stubInventoryOutOfStock("iphone_15", 1000);
+
+        RestAssured.given()
+                .contentType("application/json")
+                .body(submitOrderJson)
+                .when()
+                .post("/api/order")
+                .then()
+                .log().all()
+                .statusCode(500);
     }
 }
