@@ -58,11 +58,14 @@ public record MovieRequest(
     public MovieStatus getEffectiveStatus() {
         Object s = status != null ? status : movieStatus;
         if (s != null) {
+            String str = s.toString().toUpperCase();
+            if ("ACTIVE".equals(str)) return MovieStatus.NOW_SHOWING;
+            if ("INACTIVE".equals(str)) return MovieStatus.ENDED;
             try {
-                return MovieStatus.valueOf(s.toString().toUpperCase());
+                return MovieStatus.valueOf(str);
             } catch (Exception ignored) {}
         }
-        return MovieStatus.ACTIVE;
+        return MovieStatus.NOW_SHOWING;
     }
 }
 

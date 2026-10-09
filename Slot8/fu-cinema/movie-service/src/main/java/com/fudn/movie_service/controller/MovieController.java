@@ -27,9 +27,14 @@ public class MovieController {
         String kw = title != null ? title : keyword;
         MovieStatus movieStatus = null;
         if (status != null && !status.isBlank()) {
-            try {
-                movieStatus = MovieStatus.valueOf(status.toUpperCase());
-            } catch (Exception ignored) {}
+            String str = status.toUpperCase();
+            if ("ACTIVE".equals(str)) movieStatus = MovieStatus.NOW_SHOWING;
+            else if ("INACTIVE".equals(str)) movieStatus = MovieStatus.ENDED;
+            else {
+                try {
+                    movieStatus = MovieStatus.valueOf(str);
+                } catch (Exception ignored) {}
+            }
         }
         return movieService.search(kw, genreId, movieStatus);
     }
@@ -61,12 +66,18 @@ public class MovieController {
 
     @PutMapping("/{id}/status")
     public MovieResponse updateStatus(@PathVariable String id, @RequestParam String status) {
-        MovieStatus movieStatus;
-        try {
-            movieStatus = MovieStatus.valueOf(status.toUpperCase());
-        } catch (Exception e) {
-            throw ApiException.badRequest("Invalid status: " + status);
+        MovieStatus movieStatus = null;
+        if (status != null && !status.isBlank()) {
+            String str = status.toUpperCase();
+            if ("ACTIVE".equals(str)) movieStatus = MovieStatus.NOW_SHOWING;
+            else if ("INACTIVE".equals(str)) movieStatus = MovieStatus.ENDED;
+            else {
+                try {
+                    movieStatus = MovieStatus.valueOf(str);
+                } catch (Exception ignored) {}
+            }
         }
+        if (movieStatus == null) movieStatus = MovieStatus.NOW_SHOWING;
         return movieService.updateStatus(id, movieStatus);
     }
 
