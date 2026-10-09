@@ -3,7 +3,6 @@ package com.fudn.movie_service.controller;
 import com.fudn.movie_service.dto.ShowtimeRequest;
 import com.fudn.movie_service.dto.ShowtimeResponse;
 import com.fudn.movie_service.service.ShowtimeService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -26,6 +25,16 @@ public class ShowtimeController {
         return showtimeService.search(movieId, date);
     }
 
+    @GetMapping("/movie/{movieId}")
+    public List<ShowtimeResponse> getByMovieId(@PathVariable String movieId) {
+        return showtimeService.getByMovieId(movieId);
+    }
+
+    @GetMapping("/room/{roomId}")
+    public List<ShowtimeResponse> getByRoomId(@PathVariable String roomId) {
+        return showtimeService.getByRoomId(roomId);
+    }
+
     /** Booking Service goi endpoint nay qua OpenFeign */
     @GetMapping("/{id}")
     public ShowtimeResponse getById(@PathVariable String id) {
@@ -34,12 +43,12 @@ public class ShowtimeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ShowtimeResponse create(@Valid @RequestBody ShowtimeRequest request) {
+    public ShowtimeResponse create(@RequestBody ShowtimeRequest request) {
         return showtimeService.create(request);
     }
 
     @PutMapping("/{id}")
-    public ShowtimeResponse update(@PathVariable String id, @Valid @RequestBody ShowtimeRequest request) {
+    public ShowtimeResponse update(@PathVariable String id, @RequestBody ShowtimeRequest request) {
         return showtimeService.update(id, request);
     }
 
@@ -49,3 +58,4 @@ public class ShowtimeController {
         showtimeService.cancel(id);
     }
 }
+

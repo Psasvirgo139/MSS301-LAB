@@ -17,6 +17,8 @@ public interface ShowtimeRepository extends MongoRepository<Showtime, String> {
 
     List<Showtime> findByMovieIdOrderByStartTimeAsc(String movieId);
 
+    List<Showtime> findByRoomIdOrderByStartTimeAsc(String roomId);
+
     /** TODO 6.2: Derived query counting overlapping showtimes in the same room */
     long countByRoomIdAndShowtimeStatusAndStartTimeLessThanAndEndTimeGreaterThanAndShowtimeIdNot(
             String roomId, ShowtimeStatus status, LocalDateTime newEndTime, LocalDateTime newStartTime,

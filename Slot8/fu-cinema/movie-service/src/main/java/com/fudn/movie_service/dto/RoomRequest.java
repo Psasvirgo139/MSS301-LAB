@@ -34,6 +34,9 @@ public record RoomRequest(
     }
 
     public int getEffectiveRows() {
+        if ((seatRows != null && seatRows <= 0) || (rows != null && rows <= 0) || (totalSeats != null && totalSeats <= 0)) {
+            throw ApiException.badRequest("Room capacity must be greater than 0");
+        }
         if (seatRows != null && seatRows >= 1) return seatRows;
         if (rows != null && rows >= 1) return rows;
         if (totalSeats != null && totalSeats > 0) return 6;
@@ -41,6 +44,9 @@ public record RoomRequest(
     }
 
     public int getEffectiveCols() {
+        if ((seatsPerRow != null && seatsPerRow <= 0) || (cols != null && cols <= 0) || (totalSeats != null && totalSeats <= 0)) {
+            throw ApiException.badRequest("Room capacity must be greater than 0");
+        }
         if (seatsPerRow != null && seatsPerRow >= 1) return seatsPerRow;
         if (cols != null && cols >= 1) return cols;
         if (totalSeats != null && totalSeats > 0) return Math.min(10, totalSeats);

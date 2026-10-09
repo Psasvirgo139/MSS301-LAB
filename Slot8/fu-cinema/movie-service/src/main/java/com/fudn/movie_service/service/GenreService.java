@@ -30,7 +30,7 @@ public class GenreService {
     public GenreResponse create(GenreRequest request) {
         String name = request.getEffectiveName();
         if (genreRepository.existsByGenreNameIgnoreCase(name)) {
-            throw ApiException.conflict("Genre name already exists: " + name);
+            throw ApiException.badRequest("Genre name already exists: " + name);
         }
         Genre genre = new Genre();
         genre.setGenreName(name);
@@ -42,7 +42,7 @@ public class GenreService {
         Genre genre = find(id);
         String name = request.getEffectiveName();
         if (genreRepository.existsByGenreNameIgnoreCaseAndGenreIdNot(name, id)) {
-            throw ApiException.conflict("Genre name already exists: " + name);
+            throw ApiException.badRequest("Genre name already exists: " + name);
         }
         genre.setGenreName(name);
         genre.setDescription(request.description());

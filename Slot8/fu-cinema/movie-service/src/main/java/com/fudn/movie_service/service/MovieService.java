@@ -64,6 +64,14 @@ public class MovieService {
         return MovieResponse.from(movieRepository.save(movie), genre.getGenreName());
     }
 
+    public MovieResponse updateStatus(String id, MovieStatus status) {
+        Movie movie = find(id);
+        movie.setMovieStatus(status);
+        Movie saved = movieRepository.save(movie);
+        String genreName = genreService.find(saved.getGenreId()).getGenreName();
+        return MovieResponse.from(saved, genreName);
+    }
+
     public void delete(String id) {
         Movie movie = find(id);
         if (showtimeRepository.existsByMovieId(id)) {            // BR03
@@ -86,16 +94,17 @@ public class MovieService {
     }
 
     private Genre apply(Movie movie, MovieRequest request) {
-        Genre genre = genreService.find(request.genreId());     // BR15: 404 neu genre khong ton tai
-        movie.setTitle(request.title());
+        Genre genre = genreService.find(request.getEffectiveGenreId());     // BR15: 404 neu genre khong ton tai
+        movie.setTitle(request.getEffectiveTitle());
         movie.setDescription(request.description());
         movie.setDirector(request.director());
-        movie.setDurationMinutes(request.durationMinutes());
+        movie.setDurationMinutes(request.getEffectiveDuration());
         movie.setLanguage(request.language());
-        movie.setAgeRating(request.ageRating());
+        movie.setAgeRating(request.getEffectiveAgeRating());
         movie.setReleaseDate(request.releaseDate());
         movie.setGenreId(genre.getGenreId());
-        movie.setMovieStatus(request.movieStatus());
+        movie.setMovieStatus(request.getEffectiveStatus());
         return genre;
     }
 }
+

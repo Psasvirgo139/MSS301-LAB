@@ -40,6 +40,14 @@ public class ShowtimeService {
         return toResponses(filtered);
     }
 
+    public List<ShowtimeResponse> getByMovieId(String movieId) {
+        return toResponses(showtimeRepository.findByMovieIdOrderByStartTimeAsc(movieId));
+    }
+
+    public List<ShowtimeResponse> getByRoomId(String roomId) {
+        return toResponses(showtimeRepository.findByRoomIdOrderByStartTimeAsc(roomId));
+    }
+
     public ShowtimeResponse getById(String id) {
         Showtime s = find(id);
         return ShowtimeResponse.from(s, movieService.find(s.getMovieId()), roomService.find(s.getRoomId()));
@@ -73,8 +81,12 @@ public class ShowtimeService {
     }
 
     private ShowtimeResponse apply(Showtime showtime, ShowtimeRequest request, String excludeId) {
-        Movie movie = movieService.find(request.movieId());        // BR15
-        CinemaRoom room = roomService.find(request.roomId());      // BR15
+        String mId = request.getEffectiveMovieId();
+        String rId = request.getEffectiveRoomId();
+        java.math.BigDecimal price = request.getEffectivePrice();
+
+        Movie movie = movieService.find(mId);        // BR15: 404 if not found
+        CinemaRoom room = roomService.find(rId);      // BR15: 404 if not found
 
         // BR04
         if (movie.getMovieStatus() == MovieStatus.ENDED) {
@@ -83,17 +95,27 @@ public class ShowtimeService {
         if (room.getRoomStatus() != RoomStatus.ACTIVE) {
             throw ApiException.badRequest("Room '" + room.getRoomName() + "' is not ACTIVE");
         }
+        if (request.startTime() == null) {
+            throw ApiException.badRequest("Start time is required");
+        }
         if (!request.startTime().isAfter(LocalDateTime.now())) {
             throw ApiException.badRequest("Start time must be in the future");
         }
-        LocalDateTime endTime = request.startTime().plusMinutes(movie.getDurationMinutes());
+        LocalDateTime endTime = request.endTime();
+        if (endTime != null) {
+            if (!endTime.isAfter(request.startTime())) {
+                throw ApiException.badRequest("End time must be after start time");
+            }
+        } else {
+            endTime = request.startTime().plusMinutes(movie.getDurationMinutes());
+        }
 
         // BR05
         long overlaps = showtimeRepository
                 .countByRoomIdAndShowtimeStatusAndStartTimeLessThanAndEndTimeGreaterThanAndShowtimeIdNot(
                         room.getRoomId(), ShowtimeStatus.SCHEDULED, endTime, request.startTime(), excludeId);
         if (overlaps > 0) {
-            throw ApiException.conflict("Room '" + room.getRoomName() + "' already has a showtime between "
+            throw ApiException.badRequest("Room '" + room.getRoomName() + "' already has a showtime between "
                     + request.startTime() + " and " + endTime);
         }
 
@@ -101,7 +123,7 @@ public class ShowtimeService {
         showtime.setRoomId(room.getRoomId());
         showtime.setStartTime(request.startTime());
         showtime.setEndTime(endTime);
-        showtime.setTicketPrice(request.ticketPrice());
+        showtime.setTicketPrice(price);
         return ShowtimeResponse.from(showtimeRepository.save(showtime), movie, room);
     }
 
