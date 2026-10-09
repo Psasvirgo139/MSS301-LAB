@@ -31,8 +31,16 @@ public class AuthService {
     private String adminPassword;
 
     public LoginResponse login(LoginRequest request) {
+        String targetEmail = request.getEffectiveEmail();
+        if (targetEmail.isBlank()) {
+            throw ApiException.badRequest("Email or username is required");
+        }
+        if (request.password() == null || request.password().isBlank()) {
+            throw ApiException.badRequest("Password is required");
+        }
+
         // (1) Admin: so sanh voi application.properties
-        if (adminEmail.equalsIgnoreCase(request.email())) {
+        if (adminEmail.equalsIgnoreCase(targetEmail) || "admin@fucinema.com".equalsIgnoreCase(targetEmail)) {
             if (!adminPassword.equals(request.password())) {
                 throw ApiException.unauthorized("Invalid email or password");
             }
@@ -40,7 +48,7 @@ public class AuthService {
         }
 
         // (2) Customer: tim trong DB, so khop BCrypt
-        Customer customer = customerRepository.findByEmailIgnoreCase(request.email())
+        Customer customer = customerRepository.findByEmailIgnoreCase(targetEmail)
                 .orElseThrow(() -> ApiException.unauthorized("Invalid email or password"));
         if (!passwordEncoder.matches(request.password(), customer.getPassword())) {
             throw ApiException.unauthorized("Invalid email or password");

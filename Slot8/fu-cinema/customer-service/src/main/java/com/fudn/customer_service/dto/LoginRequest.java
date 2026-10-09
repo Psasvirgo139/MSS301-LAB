@@ -1,9 +1,13 @@
 package com.fudn.customer_service.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-
 public record LoginRequest(
-        @NotBlank(message = "Email is required") @Email(message = "Email is invalid") String email,
-        @NotBlank(message = "Password is required") String password) {
+        String email,
+        String username,
+        String password) {
+
+    public String getEffectiveEmail() {
+        if (email != null && !email.isBlank()) return email;
+        if (username != null && !username.isBlank()) return username;
+        return "";
+    }
 }
