@@ -1,9 +1,15 @@
 package com.fudn.movie_service.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import com.fudn.movie_service.exception.ApiException;
 
 public record GenreRequest(
-        @NotBlank(message = "Genre name is required") @Size(max = 50) String genreName,
-        @Size(max = 255) String description) {
+        String genreName,
+        String name,
+        String description) {
+
+    public String getEffectiveName() {
+        if (genreName != null && !genreName.isBlank()) return genreName;
+        if (name != null && !name.isBlank()) return name;
+        throw ApiException.badRequest("Genre name cannot be empty");
+    }
 }

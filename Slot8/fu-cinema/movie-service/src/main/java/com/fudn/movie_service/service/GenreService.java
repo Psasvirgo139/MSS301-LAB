@@ -28,21 +28,23 @@ public class GenreService {
     }
 
     public GenreResponse create(GenreRequest request) {
-        if (genreRepository.existsByGenreNameIgnoreCase(request.genreName())) {
-            throw ApiException.conflict("Genre name already exists: " + request.genreName());
+        String name = request.getEffectiveName();
+        if (genreRepository.existsByGenreNameIgnoreCase(name)) {
+            throw ApiException.conflict("Genre name already exists: " + name);
         }
         Genre genre = new Genre();
-        genre.setGenreName(request.genreName());
+        genre.setGenreName(name);
         genre.setDescription(request.description());
         return GenreResponse.from(genreRepository.save(genre));
     }
 
     public GenreResponse update(String id, GenreRequest request) {
         Genre genre = find(id);
-        if (genreRepository.existsByGenreNameIgnoreCaseAndGenreIdNot(request.genreName(), id)) {
-            throw ApiException.conflict("Genre name already exists: " + request.genreName());
+        String name = request.getEffectiveName();
+        if (genreRepository.existsByGenreNameIgnoreCaseAndGenreIdNot(name, id)) {
+            throw ApiException.conflict("Genre name already exists: " + name);
         }
-        genre.setGenreName(request.genreName());
+        genre.setGenreName(name);
         genre.setDescription(request.description());
         return GenreResponse.from(genreRepository.save(genre));
     }

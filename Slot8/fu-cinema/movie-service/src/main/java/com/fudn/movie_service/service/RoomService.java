@@ -28,8 +28,9 @@ public class RoomService {
     }
 
     public RoomResponse create(RoomRequest request) {
-        if (roomRepository.existsByRoomNameIgnoreCase(request.roomName())) {
-            throw ApiException.conflict("Room name already exists: " + request.roomName());
+        String name = request.getEffectiveName();
+        if (roomRepository.existsByRoomNameIgnoreCase(name)) {
+            throw ApiException.conflict("Room name already exists: " + name);
         }
         CinemaRoom room = new CinemaRoom();
         apply(room, request);
@@ -38,8 +39,9 @@ public class RoomService {
 
     public RoomResponse update(String id, RoomRequest request) {
         CinemaRoom room = find(id);
-        if (roomRepository.existsByRoomNameIgnoreCaseAndRoomIdNot(request.roomName(), id)) {
-            throw ApiException.conflict("Room name already exists: " + request.roomName());
+        String name = request.getEffectiveName();
+        if (roomRepository.existsByRoomNameIgnoreCaseAndRoomIdNot(name, id)) {
+            throw ApiException.conflict("Room name already exists: " + name);
         }
         apply(room, request);
         return RoomResponse.from(roomRepository.save(room));
@@ -59,10 +61,10 @@ public class RoomService {
     }
 
     private void apply(CinemaRoom room, RoomRequest request) {
-        room.setRoomName(request.roomName());
-        room.setRoomType(request.roomType());
-        room.setSeatRows(request.seatRows());
-        room.setSeatsPerRow(request.seatsPerRow());
-        room.setRoomStatus(request.roomStatus());
+        room.setRoomName(request.getEffectiveName());
+        room.setRoomType(request.getEffectiveType());
+        room.setSeatRows(request.getEffectiveRows());
+        room.setSeatsPerRow(request.getEffectiveCols());
+        room.setRoomStatus(request.getEffectiveStatus());
     }
 }
