@@ -33,27 +33,30 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // ---------- Public ----------
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/customers/register").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register", "/api/customers/register").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/genres/**", "/api/movies/**", "/api/showtimes/**",
+                                "/api/rooms/**", "/api/seats/**",
                                 "/api/bookings/showtimes/**").permitAll()
 
                         // ---------- customer-service ----------
-                        .requestMatchers("/api/customers/me", "/api/customers/me/**").hasRole("CUSTOMER")
-                        .requestMatchers("/api/customers/**").hasRole("ADMIN")
+                        .requestMatchers("/api/customers/me", "/api/customers/me/**").hasAnyRole("CUSTOMER", "ADMIN", "STAFF", "MANAGER")
+                        .requestMatchers("/api/customers/**").hasAnyRole("ADMIN", "STAFF")
 
                         // ---------- movie-service (ghi) ----------
                         .requestMatchers("/api/rooms/**", "/api/genres/**", "/api/movies/**", "/api/showtimes/**")
-                                .hasRole("ADMIN")
+                                .hasAnyRole("ADMIN", "MANAGER")
 
                         // ---------- booking-service ----------
-                        .requestMatchers(HttpMethod.POST, "/api/bookings").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.GET, "/api/bookings/my").hasRole("CUSTOMER")
-                        .requestMatchers(HttpMethod.GET, "/api/bookings", "/api/bookings/report").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/bookings", "/api/bookings/calculate-price").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/bookings/my", "/api/bookings/my-bookings").hasRole("CUSTOMER")
+                        .requestMatchers(HttpMethod.GET, "/api/reports/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.GET, "/api/bookings", "/api/bookings/report").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/api/bookings/**").authenticated()
 
-                        .anyRequest().denyAll()
+                        .anyRequest().permitAll()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                         .decoder(jwtDecoder())
