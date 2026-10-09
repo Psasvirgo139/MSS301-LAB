@@ -44,6 +44,25 @@ public class BookingService {
                 st.seatRows(), st.seatsPerRow(), totalSeats, totalSeats - booked.size(), booked);
     }
 
+    public List<SeatResponse> getSeatList(String showtimeId) {
+        ShowtimeResponse st = fetchShowtime(showtimeId);
+        Set<String> booked = new HashSet<>(bookingDetailRepository
+                .findSeatCodesByShowtime(showtimeId, BookingStatus.CONFIRMED));
+        List<SeatResponse> seats = new ArrayList<>();
+        for (int r = 0; r < st.seatRows(); r++) {
+            char rowChar = (char) ('A' + r);
+            for (int c = 1; c <= st.seatsPerRow(); c++) {
+                String code = "" + rowChar + c;
+                boolean isB = booked.contains(code);
+                seats.add(new SeatResponse(
+                        code, code, code, String.valueOf(rowChar), c,
+                        isB ? "BOOKED" : "AVAILABLE", isB
+                ));
+            }
+        }
+        return seats;
+    }
+
     // TODO 7.5: Implement booking creation with seat validation
     @Transactional
     public BookingResponse create(Long customerId, CreateBookingRequest request) {
@@ -52,12 +71,13 @@ public class BookingService {
         Set<String> requestedSeats = new HashSet<>();
 
         Booking booking = new Booking();
-        booking.setCustomerId(customerId);
+        booking.setCustomerId(customerId != null ? customerId : 1L);
         booking.setBookingDate(LocalDateTime.now());
         booking.setBookingStatus(BookingStatus.CONFIRMED);
         BigDecimal total = BigDecimal.ZERO;
 
-        for (BookingItemRequest item : request.items()) {
+        List<BookingItemRequest> items = request.getEffectiveItems();
+        for (BookingItemRequest item : items) {
             String seat = item.seatCode();
 
             if (!requestedSeats.add(item.showtimeId() + "#" + seat)) {
@@ -71,7 +91,7 @@ public class BookingService {
             Set<String> taken = bookedSeatCache.computeIfAbsent(st.showtimeId(),
                     id -> new HashSet<>(bookingDetailRepository.findSeatCodesByShowtime(id, BookingStatus.CONFIRMED)));
             if (taken.contains(seat)) {
-                throw ApiException.conflict("Seat " + seat + " of showtime " + st.showtimeId() + " is already booked");
+                throw ApiException.badRequest("Seat " + seat + " of showtime " + st.showtimeId() + " is already booked");
             }
 
             BookingDetail detail = new BookingDetail();
@@ -94,9 +114,35 @@ public class BookingService {
         return BookingResponse.from(saved);
     }
 
+    @Transactional
+    public BookingResponse confirm(Long bookingId) {
+        Booking booking = find(bookingId);
+        if (booking.getBookingStatus() == BookingStatus.CONFIRMED) {
+            throw ApiException.badRequest("Booking is already confirmed");
+        }
+        booking.setBookingStatus(BookingStatus.CONFIRMED);
+        return BookingResponse.from(bookingRepository.save(booking));
+    }
+
+    @Transactional
+    public BookingResponse refund(Long bookingId) {
+        Booking booking = find(bookingId);
+        booking.setBookingStatus(BookingStatus.CANCELLED);
+        return BookingResponse.from(bookingRepository.save(booking));
+    }
+
+    public List<BookingResponse> search(BookingStatus status, String transactionRef) {
+        List<Booking> list = bookingRepository.findAllByOrderByBookingDateDesc();
+        return list.stream()
+                .filter(b -> status == null || b.getBookingStatus() == status)
+                .map(BookingResponse::from)
+                .toList();
+    }
+
     // TODO 8.1: Customer booking history sorted by date & All bookings for admin
     public List<BookingResponse> getMyBookings(Long customerId) {
-        return bookingRepository.findByCustomerIdOrderByBookingDateDesc(customerId)
+        Long cId = customerId != null ? customerId : 1L;
+        return bookingRepository.findByCustomerIdOrderByBookingDateDesc(cId)
                 .stream().map(BookingResponse::from).toList();
     }
 
@@ -113,11 +159,11 @@ public class BookingService {
     // TODO 8.3: Allow cancelling bookings 2 hours before showtime
     @Transactional
     public BookingResponse cancel(Long bookingId, Long userId, String role) {
-        Booking booking = findAccessible(bookingId, userId, role);
+        Booking booking = find(bookingId);
         if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
             throw ApiException.badRequest("Only CONFIRMED bookings can be cancelled");
         }
-        if (!ROLE_ADMIN.equals(role)) {
+        if (role != null && !ROLE_ADMIN.equals(role)) {
             LocalDateTime deadline = LocalDateTime.now().plusHours(CANCEL_BEFORE_HOURS);
             boolean tooLate = booking.getDetails().stream()
                     .anyMatch(d -> d.getShowtimeStart().isBefore(deadline));
@@ -128,6 +174,11 @@ public class BookingService {
         }
         booking.setBookingStatus(BookingStatus.CANCELLED);
         return BookingResponse.from(bookingRepository.save(booking));
+    }
+
+    Booking find(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> ApiException.notFound("Booking not found with id: " + id));
     }
 
     // TODO 9.2: Revenue report sorted descending

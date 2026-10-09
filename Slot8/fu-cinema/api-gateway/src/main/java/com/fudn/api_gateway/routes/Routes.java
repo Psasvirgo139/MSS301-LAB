@@ -49,7 +49,9 @@ public class Routes {
     @Bean
     public RouterFunction<ServerResponse> bookingServiceRoute() {
         return route("booking_service")
-                .route(RequestPredicates.path("/api/bookings/**"), http())
+                .route(path("/api/bookings/**")
+                        .or(path("/api/seats/**"))
+                        .or(path("/api/reports/**")), http())
                 .before(uri(bookingServiceUrl))
                 .before(forwardUserInfo())
                 .build();
