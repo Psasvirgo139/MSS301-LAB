@@ -13,6 +13,13 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetail, Lo
     @Query("""
             select d.seatCode from BookingDetail d
             where d.showtimeId = :showtimeId
+              and d.booking.bookingStatus <> com.fudn.booking_service.model.BookingStatus.CANCELLED
+            """)
+    List<String> findActiveSeatCodesByShowtime(@Param("showtimeId") String showtimeId);
+
+    @Query("""
+            select d.seatCode from BookingDetail d
+            where d.showtimeId = :showtimeId
               and d.booking.bookingStatus = :status
             """)
     List<String> findSeatCodesByShowtime(@Param("showtimeId") String showtimeId,

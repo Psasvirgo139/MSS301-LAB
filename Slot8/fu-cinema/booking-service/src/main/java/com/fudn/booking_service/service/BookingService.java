@@ -37,7 +37,7 @@ public class BookingService {
     public SeatMapResponse getSeatMap(String showtimeId) {
         ShowtimeResponse st = fetchShowtime(showtimeId);
         List<String> booked = bookingDetailRepository
-                .findSeatCodesByShowtime(showtimeId, BookingStatus.CONFIRMED)
+                .findActiveSeatCodesByShowtime(showtimeId)
                 .stream().sorted().toList();
         int totalSeats = st.seatRows() * st.seatsPerRow();
         return new SeatMapResponse(st.showtimeId(), st.movieTitle(), st.roomName(), st.startTime(),
@@ -47,7 +47,7 @@ public class BookingService {
     public List<SeatResponse> getSeatList(String showtimeId) {
         ShowtimeResponse st = fetchShowtime(showtimeId);
         Set<String> booked = new HashSet<>(bookingDetailRepository
-                .findSeatCodesByShowtime(showtimeId, BookingStatus.CONFIRMED));
+                .findActiveSeatCodesByShowtime(showtimeId));
         List<SeatResponse> seats = new ArrayList<>();
         for (int r = 0; r < st.seatRows(); r++) {
             char rowChar = (char) ('A' + r);
@@ -66,6 +66,12 @@ public class BookingService {
     // TODO 7.5: Implement booking creation with seat validation
     @Transactional
     public BookingResponse create(Long customerId, CreateBookingRequest request) {
+        if ((request.totalAmount() != null && request.totalAmount().compareTo(BigDecimal.ZERO) < 0)
+                || (request.amount() != null && request.amount().compareTo(BigDecimal.ZERO) < 0)
+                || (request.price() != null && request.price().compareTo(BigDecimal.ZERO) < 0)) {
+            throw ApiException.badRequest("Total amount cannot be negative");
+        }
+
         Map<String, ShowtimeResponse> showtimeCache = new HashMap<>();
         Map<String, Set<String>> bookedSeatCache = new HashMap<>();
         Set<String> requestedSeats = new HashSet<>();
@@ -73,7 +79,7 @@ public class BookingService {
         Booking booking = new Booking();
         booking.setCustomerId(customerId != null ? customerId : 1L);
         booking.setBookingDate(LocalDateTime.now());
-        booking.setBookingStatus(BookingStatus.CONFIRMED);
+        booking.setBookingStatus(BookingStatus.PENDING);
         BigDecimal total = BigDecimal.ZERO;
 
         List<BookingItemRequest> items = request.getEffectiveItems();
@@ -89,7 +95,7 @@ public class BookingService {
             validateSeat(seat, st);
 
             Set<String> taken = bookedSeatCache.computeIfAbsent(st.showtimeId(),
-                    id -> new HashSet<>(bookingDetailRepository.findSeatCodesByShowtime(id, BookingStatus.CONFIRMED)));
+                    id -> new HashSet<>(bookingDetailRepository.findActiveSeatCodesByShowtime(id)));
             if (taken.contains(seat)) {
                 throw ApiException.badRequest("Seat " + seat + " of showtime " + st.showtimeId() + " is already booked");
             }

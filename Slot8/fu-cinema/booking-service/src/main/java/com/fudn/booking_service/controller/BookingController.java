@@ -128,7 +128,11 @@ public class BookingController {
     }
 
     @PostMapping("/{id}/refund")
-    public BookingResponse refund(@PathVariable Long id) {
+    public BookingResponse refund(@PathVariable Long id,
+                                  @RequestHeader(value = USER_ROLE, required = false) String role) {
+        if (role != null && !"ADMIN".equalsIgnoreCase(role) && !"MANAGER".equalsIgnoreCase(role) && !"STAFF".equalsIgnoreCase(role)) {
+            throw ApiException.forbidden("Only admin, manager or staff can process refunds");
+        }
         return bookingService.refund(id);
     }
 }
