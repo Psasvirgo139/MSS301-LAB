@@ -1,0 +1,141 @@
+{
+  "info": {
+    "_postman_id": "fucinema-booking-system-collection",
+    "name": "FUCinemaBookingSystem",
+    "description": "Postman Collection for FUCinema Booking Microservices System (F1-F10)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test(\"Response time < 3000ms\", () => pm.expect(pm.response.responseTime).to.be.below(3000));"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "01-Auth",
+      "item": [
+        {
+          "name": "1.1 Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@fucinema.com\",\n  \"password\": \"@@abc123@@\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Role is ADMIN\", () => pm.expect(json.role).to.eql(\"ADMIN\"));",
+                  "pm.test(\"Has Bearer token\", () => {",
+                  "    pm.expect(json.tokenType).to.eql(\"Bearer\");",
+                  "    pm.expect(json.accessToken.split(\".\")).to.have.lengthOf(3);",
+                  "});",
+                  "pm.environment.set(\"adminToken\", json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "1.2 Login Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"an@gmail.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": [
+                "{{gateway}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Role is CUSTOMER\", () => pm.expect(json.role).to.eql(\"CUSTOMER\"));",
+                  "pm.test(\"userId = 1\", () => pm.expect(json.userId).to.eql(1));",
+                  "pm.environment.set(\"customerToken\", json.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02-Customer",
+      "item": []
+    },
+    {
+      "name": "03-Genre-Room",
+      "item": []
+    },
+    {
+      "name": "04-Movie",
+      "item": []
+    },
+    {
+      "name": "05-Showtime",
+      "item": []
+    },
+    {
+      "name": "06-Booking",
+      "item": []
+    },
+    {
+      "name": "07-History-Cancel",
+      "item": []
+    },
+    {
+      "name": "08-Report",
+      "item": []
+    }
+  ]
+}
