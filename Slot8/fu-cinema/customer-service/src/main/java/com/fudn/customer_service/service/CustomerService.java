@@ -34,10 +34,10 @@ public class CustomerService {
     public CustomerResponse register(RegisterRequest request) {
         ensureEmailAvailable(request.email(), null);
         Customer customer = new Customer();
-        customer.setCustomerName(request.customerName());
-        customer.setTelephone(request.telephone());
+        customer.setCustomerName(request.getEffectiveName());
+        customer.setTelephone(request.getEffectivePhone());
         customer.setEmail(request.email());
-        customer.setCustomerBirthday(request.customerBirthday());
+        customer.setCustomerBirthday(request.getEffectiveBirthday());
         customer.setCustomerStatus(CustomerStatus.ACTIVE);
         customer.setPassword(passwordEncoder.encode(request.password()));
         Customer saved = customerRepository.save(customer);
