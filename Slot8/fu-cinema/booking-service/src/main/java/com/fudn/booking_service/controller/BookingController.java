@@ -2,13 +2,16 @@ package com.fudn.booking_service.controller;
 
 import com.fudn.booking_service.dto.BookingResponse;
 import com.fudn.booking_service.dto.CreateBookingRequest;
+import com.fudn.booking_service.dto.ReportResponse;
 import com.fudn.booking_service.dto.SeatMapResponse;
 import com.fudn.booking_service.service.BookingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -45,6 +48,14 @@ public class BookingController {
     @GetMapping
     public List<BookingResponse> getAll() {
         return bookingService.getAll();
+    }
+
+    // TODO 9.3: ADMIN report
+    @GetMapping("/report")
+    public ReportResponse report(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return bookingService.report(startDate, endDate);
     }
 
     // TODO 8.2: Owner or ADMIN get booking by id
