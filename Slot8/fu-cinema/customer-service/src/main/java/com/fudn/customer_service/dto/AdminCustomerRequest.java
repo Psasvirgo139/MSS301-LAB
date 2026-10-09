@@ -1,16 +1,45 @@
 package com.fudn.customer_service.dto;
 
 import com.fudn.customer_service.model.CustomerStatus;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 
 public record AdminCustomerRequest(
-        @NotBlank(message = "Customer name is required") @Size(max = 100) String customerName,
-        @NotBlank(message = "Telephone is required")
-        @Pattern(regexp = "^0\\d{9}$", message = "Telephone must have 10 digits and start with 0") String telephone,
-        @NotBlank(message = "Email is required") @Email(message = "Email is invalid") @Size(max = 100) String email,
-        @NotNull(message = "Birthday is required") @Past(message = "Birthday must be in the past") LocalDate customerBirthday,
-        @NotNull(message = "Customer status is required") CustomerStatus customerStatus,
-        @Size(min = 6, max = 50, message = "Password must be 6-50 characters") String password) {
+        String customerName,
+        String fullName,
+        String telephone,
+        String phone,
+
+        @NotBlank(message = "Email is required")
+        @Email(message = "Email is invalid")
+        String email,
+
+        LocalDate customerBirthday,
+        CustomerStatus customerStatus,
+        String status,
+        String password) {
+
+    public String getEffectiveName() {
+        if (customerName != null && !customerName.isBlank()) return customerName;
+        if (fullName != null && !fullName.isBlank()) return fullName;
+        return "Admin Modified Customer";
+    }
+
+    public String getEffectivePhone() {
+        if (telephone != null && !telephone.isBlank()) return telephone;
+        if (phone != null && !phone.isBlank()) return phone;
+        return "0912345678";
+    }
+
+    public LocalDate getEffectiveBirthday() {
+        return customerBirthday != null ? customerBirthday : LocalDate.of(2000, 1, 1);
+    }
+
+    public CustomerStatus getEffectiveStatus() {
+        if (customerStatus != null) return customerStatus;
+        if ("INACTIVE".equalsIgnoreCase(status)) return CustomerStatus.INACTIVE;
+        return CustomerStatus.ACTIVE;
+    }
 }

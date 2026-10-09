@@ -53,9 +53,9 @@ public class CustomerService {
     @Transactional
     public CustomerResponse updateProfile(Long customerId, ProfileUpdateRequest request) {
         Customer customer = findCustomer(customerId);
-        customer.setCustomerName(request.customerName());
-        customer.setTelephone(request.telephone());
-        customer.setCustomerBirthday(request.customerBirthday());
+        customer.setCustomerName(request.getEffectiveName());
+        customer.setTelephone(request.getEffectivePhone());
+        customer.setCustomerBirthday(request.getEffectiveBirthday());
         return CustomerResponse.from(customerRepository.save(customer));
     }
 
@@ -136,10 +136,10 @@ public class CustomerService {
     }
 
     private void applyAdminRequest(Customer customer, AdminCustomerRequest request) {
-        customer.setCustomerName(request.customerName());
-        customer.setTelephone(request.telephone());
+        customer.setCustomerName(request.getEffectiveName());
+        customer.setTelephone(request.getEffectivePhone());
         customer.setEmail(request.email());
-        customer.setCustomerBirthday(request.customerBirthday());
-        customer.setCustomerStatus(request.customerStatus());
+        customer.setCustomerBirthday(request.getEffectiveBirthday());
+        customer.setCustomerStatus(request.getEffectiveStatus());
     }
 }
