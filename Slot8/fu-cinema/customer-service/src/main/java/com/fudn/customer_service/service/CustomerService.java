@@ -118,6 +118,19 @@ public class CustomerService {
         customerRepository.save(customer);
     }
 
+    @Transactional
+    public CustomerResponse updateStatus(Long id, CustomerStatus status) {
+        Customer customer = findCustomer(id);
+        customer.setCustomerStatus(status);
+        return CustomerResponse.from(customerRepository.save(customer));
+    }
+
+    @Transactional
+    public CustomerResponse updatePoints(Long id, int points) {
+        Customer customer = findCustomer(id);
+        return CustomerResponse.from(customerRepository.save(customer));
+    }
+
     // ===================== HELPER =====================
 
     private Customer findCustomer(Long id) {

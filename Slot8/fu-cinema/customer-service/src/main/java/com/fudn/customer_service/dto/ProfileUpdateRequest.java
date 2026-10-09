@@ -1,6 +1,6 @@
 package com.fudn.customer_service.dto;
 
-import jakarta.validation.constraints.Email;
+import com.fudn.customer_service.exception.ApiException;
 
 import java.time.LocalDate;
 
@@ -12,7 +12,19 @@ public record ProfileUpdateRequest(
         String email,
         LocalDate customerBirthday) {
 
+    public void validate() {
+        if ((customerName == null || customerName.isBlank()) && (fullName == null || fullName.isBlank())) {
+            throw ApiException.badRequest("Customer name cannot be empty");
+        }
+        if (email != null && !email.isBlank()) {
+            if (!email.contains("@") || email.startsWith("@") || email.endsWith("@")) {
+                throw ApiException.badRequest("Invalid email format: " + email);
+            }
+        }
+    }
+
     public String getEffectiveName() {
+        validate();
         if (customerName != null && !customerName.isBlank()) return customerName;
         if (fullName != null && !fullName.isBlank()) return fullName;
         return "Updated Customer";

@@ -50,6 +50,11 @@ public class CustomerController {
         return customerService.search(keyword);
     }
 
+    @GetMapping("/search")
+    public List<CustomerResponse> searchByPath(@RequestParam(required = false) String keyword) {
+        return customerService.search(keyword);
+    }
+
     @GetMapping("/{id}")
     public CustomerResponse getById(@PathVariable Long id) {
         return customerService.getById(id);
@@ -64,6 +69,16 @@ public class CustomerController {
     @PutMapping("/{id}")
     public CustomerResponse update(@PathVariable Long id, @Valid @RequestBody AdminCustomerRequest request) {
         return customerService.update(id, request);
+    }
+
+    @PutMapping("/{id}/status")
+    public CustomerResponse updateStatus(@PathVariable Long id, @RequestParam com.fudn.customer_service.model.CustomerStatus status) {
+        return customerService.updateStatus(id, status);
+    }
+
+    @PutMapping("/{id}/points")
+    public CustomerResponse updatePoints(@PathVariable Long id, @RequestParam(defaultValue = "0") int points) {
+        return customerService.updatePoints(id, points);
     }
 
     @DeleteMapping("/{id}")
