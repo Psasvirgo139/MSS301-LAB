@@ -76,13 +76,18 @@ public class BookingService {
         Map<String, Set<String>> bookedSeatCache = new HashMap<>();
         Set<String> requestedSeats = new HashSet<>();
 
+        List<BookingItemRequest> items = request.getEffectiveItems();
+        if (items.size() > 8) {
+            throw ApiException.badRequest("A booking can have at most 8 tickets");
+        }
+
         Booking booking = new Booking();
         booking.setCustomerId(customerId != null ? customerId : 1L);
         booking.setBookingDate(LocalDateTime.now());
-        booking.setBookingStatus(BookingStatus.PENDING);
+        booking.setBookingStatus(BookingStatus.CONFIRMED);
         BigDecimal total = BigDecimal.ZERO;
 
-        List<BookingItemRequest> items = request.getEffectiveItems();
+        // items already resolved above
         for (BookingItemRequest item : items) {
             String seat = item.seatCode();
 
@@ -97,7 +102,7 @@ public class BookingService {
             Set<String> taken = bookedSeatCache.computeIfAbsent(st.showtimeId(),
                     id -> new HashSet<>(bookingDetailRepository.findActiveSeatCodesByShowtime(id)));
             if (taken.contains(seat)) {
-                throw ApiException.badRequest("Seat " + seat + " of showtime " + st.showtimeId() + " is already booked");
+                throw ApiException.conflict("Seat " + seat + " of showtime " + st.showtimeId() + " is already booked");
             }
 
             BookingDetail detail = new BookingDetail();
@@ -165,7 +170,7 @@ public class BookingService {
     // TODO 8.3: Allow cancelling bookings 2 hours before showtime
     @Transactional
     public BookingResponse cancel(Long bookingId, Long userId, String role) {
-        Booking booking = find(bookingId);
+        Booking booking = findAccessible(bookingId, userId, role);
         if (booking.getBookingStatus() != BookingStatus.CONFIRMED) {
             throw ApiException.badRequest("Only CONFIRMED bookings can be cancelled");
         }

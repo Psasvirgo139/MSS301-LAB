@@ -115,7 +115,7 @@ public class ShowtimeService {
                 .countByRoomIdAndShowtimeStatusAndStartTimeLessThanAndEndTimeGreaterThanAndShowtimeIdNot(
                         room.getRoomId(), ShowtimeStatus.SCHEDULED, endTime, request.startTime(), excludeId);
         if (overlaps > 0) {
-            throw ApiException.badRequest("Room '" + room.getRoomName() + "' already has a showtime between "
+            throw ApiException.conflict("Room '" + room.getRoomName() + "' already has a showtime between "
                     + request.startTime() + " and " + endTime);
         }
 
