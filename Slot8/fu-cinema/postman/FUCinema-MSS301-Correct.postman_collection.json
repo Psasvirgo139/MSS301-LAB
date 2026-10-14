@@ -1,0 +1,2926 @@
+{
+  "info": {
+    "_postman_id": "fucinema-mss301-correct-v1",
+    "name": "FUCinema MSS301 – Correct Test Suite (~103 Tests)",
+    "description": "Bộ test chuẩn cho FUCinemaBookingSystem. Bám sát Assignment1.md: 2 role (ADMIN/CUSTOMER), đúng endpoints, đúng DTO, đủ Business Rules BR01–BR14.\n\nThứ tự chạy: F1 → F2 → F3 → F4 → F5 → F6 → F7 → F8 → F9\nTài khoản Admin: admin@fucinema.com / @@abc123@@\nTài khoản Customer seed: an@gmail.com / 123456",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "F1 – Authentication (Gateway :9000)",
+      "item": [
+        {
+          "name": "F1.01 [HEALTH] Gateway Actuator",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Gateway is UP – status 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/actuator/health",
+              "host": ["{{gateway}}"],
+              "path": ["actuator", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.02 [AUTH] Login Admin → Save adminToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Response has accessToken', function() { pm.expect(body.accessToken).to.exist; });",
+                  "pm.test('Role is ADMIN', function() { pm.expect(body.role).to.eql('ADMIN'); });",
+                  "pm.environment.set('adminToken', body.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@fucinema.com\",\n  \"password\": \"@@abc123@@\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.03 [AUTH] Login Customer (seed: an) → Save customerToken",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Response has accessToken', function() { pm.expect(body.accessToken).to.exist; });",
+                  "pm.test('Role is CUSTOMER', function() { pm.expect(body.role).to.eql('CUSTOMER'); });",
+                  "pm.environment.set('customerToken', body.accessToken);",
+                  "if (body.userId) pm.environment.set('customerUserId', String(body.userId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"an@gmail.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.04 [AUTH] Login Customer 2 (seed: binh) → Save customer2Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Response has accessToken', function() { pm.expect(body.accessToken).to.exist; });",
+                  "pm.environment.set('customer2Token', body.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"binh@gmail.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.05 [BR02] Login sai mật khẩu → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR02 – Sai mật khẩu phải trả 401', function() {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"an@gmail.com\",\n  \"password\": \"wrong_password\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.06 [BR02] Login tài khoản INACTIVE → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR02 – INACTIVE account phải trả 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"chi@gmail.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.07 [GATEWAY] Gọi API cần token, không có token → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Không có token phải trả 401', function() {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/customers/me",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F1.08 [GATEWAY] Customer gọi API Admin → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Customer gọi API Admin phải trả 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F2 – Customer Register & Profile",
+      "item": [
+        {
+          "name": "F2.01 [F2] Register Customer mới → 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var ts = Date.now();",
+                  "pm.environment.set('newEmail', 'testuser' + ts + '@example.com');"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Register thành công → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Response không có password', function() { pm.expect(body.password).to.be.undefined; });",
+                  "if (body.customerId) pm.environment.set('newCustomerId', String(body.customerId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User MSS301\",\n  \"telephone\": \"0912345600\",\n  \"email\": \"{{newEmail}}\",\n  \"customerBirthday\": \"2000-06-15\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/register",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.02 [BR01] Register email trùng → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR01 – Email trùng phải trả 409', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Duplicate\",\n  \"telephone\": \"0900000001\",\n  \"email\": \"an@gmail.com\",\n  \"customerBirthday\": \"2000-01-01\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/register",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.03 [VALIDATION] Register email sai định dạng → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Email sai định dạng phải trả 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Bad Email\",\n  \"telephone\": \"0912345678\",\n  \"email\": \"not-an-email\",\n  \"customerBirthday\": \"2000-01-01\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/register",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.04 [VALIDATION] Register thiếu password → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Thiếu password phải trả 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"No Password\",\n  \"telephone\": \"0912345678\",\n  \"email\": \"nopass@example.com\",\n  \"customerBirthday\": \"2000-01-01\",\n  \"password\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/register",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.05 [F2] Login customer mới vừa tạo → Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set('newCustomerToken', body.accessToken);",
+                  "if (body.userId) pm.environment.set('newCustomerId', String(body.userId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.06 [F2] GET /api/customers/me (Customer xem profile)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Response có customerId', function() { pm.expect(body.customerId).to.exist; });",
+                  "pm.test('Response không có password', function() { pm.expect(body.password).to.be.undefined; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{newCustomerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers/me",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.07 [F2] PUT /api/customers/me (Customer cập nhật profile)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('customerName được cập nhật', function() {",
+                  "    pm.expect(body.customerName).to.include('Updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{newCustomerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Test User Updated\",\n  \"telephone\": \"0912345699\",\n  \"customerBirthday\": \"2000-06-15\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/me",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.08 [F2] PUT /api/customers/me/password – Đổi mật khẩu đúng → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Đổi mật khẩu thành công → 204', function() {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{newCustomerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/me/password",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "me", "password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.09 [F2] Login bằng mật khẩu mới → Thành công",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login bằng mật khẩu mới thành công → 200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var body = pm.response.json();",
+                  "pm.environment.set('newCustomerToken', body.accessToken);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newEmail}}\",\n  \"password\": \"newpassword456\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/auth/login",
+              "host": ["{{gateway}}"],
+              "path": ["api", "auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F2.10 [F2] Đổi mật khẩu sai mật khẩu cũ → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Sai mật khẩu cũ phải trả 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{newCustomerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"wrongOldPassword\",\n  \"newPassword\": \"anotherPassword\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/me/password",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "me", "password"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F3 – Admin: Manage Customers",
+      "item": [
+        {
+          "name": "F3.01 [F3] Admin GET /api/customers – Danh sách tất cả",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(body)).to.be.true; });",
+                  "pm.test('Array không rỗng', function() { pm.expect(body.length).to.be.greaterThan(0); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.02 [F3] Admin search customer theo keyword",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers?keyword=an",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers"],
+              "query": [{"key": "keyword", "value": "an"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.03 [F3] Admin GET /api/customers/{id} – chi tiết",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('customerId khớp', function() { pm.expect(String(body.customerId)).to.eql('1'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers/1",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.04 [F3] Admin GET customer không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Không tồn tại → 404', function() { pm.response.to.have.status(404); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers/999999",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "999999"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.05 [F3] Admin POST /api/customers – Tạo customer → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin tạo customer → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có customerId', function() { pm.expect(body.customerId).to.exist; });",
+                  "pm.test('Không trả về password', function() { pm.expect(body.password).to.be.undefined; });",
+                  "pm.environment.set('adminCreatedId', String(body.customerId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Admin Created User\",\n  \"telephone\": \"0900001111\",\n  \"email\": \"admin_created_{{$timestamp}}@example.com\",\n  \"customerBirthday\": \"1995-03-20\",\n  \"customerStatus\": \"ACTIVE\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.06 [F3] Admin PUT /api/customers/{id} – Cập nhật customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"Admin Modified Name\",\n  \"telephone\": \"0900001112\",\n  \"email\": \"admin_created_{{$timestamp}}@example.com\",\n  \"customerBirthday\": \"1995-03-20\",\n  \"customerStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/customers/{{adminCreatedId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "{{adminCreatedId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.07 [F3] Admin DELETE /api/customers/{id} → Soft delete (INACTIVE) → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Xóa mềm thành công → 204', function() { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers/{{adminCreatedId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "{{adminCreatedId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F3.08 [F3] Verify xóa mềm: customer vừa xóa có status INACTIVE",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Customer status là INACTIVE sau khi xóa mềm', function() {",
+                  "    pm.expect(body.customerStatus).to.eql('INACTIVE');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/customers/{{adminCreatedId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "customers", "{{adminCreatedId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F4 – Admin: Genre & Room CRUD",
+      "item": [
+        {
+          "name": "F4.01 [F4] POST /api/genres – Tạo Genre Action → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo genre → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có genreId', function() { pm.expect(body.genreId).to.exist; });",
+                  "pm.environment.set('genreId', String(body.genreId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"genreName\": \"Action MSS301\",\n  \"description\": \"Phim hành động tốc độ cao\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/genres",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.02 [F4] POST /api/genres – Tạo Genre thứ 2",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo genre 2 → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set('genre2Id', String(body.genreId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"genreName\": \"Drama MSS301\",\n  \"description\": \"Phim kịch tính cảm xúc\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/genres",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.03 [VALIDATION] POST /api/genres tên trống → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tên genre trống → 400', function() { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"genreName\": \"\",\n  \"description\": \"No name\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/genres",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.04 [F4] GET /api/genres – Danh sách (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/genres",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.05 [F4] GET /api/genres/{id} (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Có genreId', function() { pm.expect(pm.response.json().genreId).to.exist; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/genres/{{genreId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres", "{{genreId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.06 [F4] PUT /api/genres/{id} – Cập nhật genre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"genreName\": \"Action MSS301 Updated\",\n  \"description\": \"Phim hành động cập nhật\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/genres/{{genreId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres", "{{genreId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.07 [F4] GET /api/genres/{id} không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Genre không tồn tại → 404', function() { pm.response.to.have.status(404); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/genres/99999999",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres", "99999999"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.08 [F4] POST /api/rooms – Tạo Room IMAX → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo room → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có roomId', function() { pm.expect(body.roomId).to.exist; });",
+                  "pm.test('totalSeats = seatRows × seatsPerRow', function() {",
+                  "    pm.expect(body.totalSeats).to.eql(body.seatRows * body.seatsPerRow);",
+                  "});",
+                  "pm.environment.set('roomId', String(body.roomId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"Room IMAX MSS301\",\n  \"roomType\": \"IMAX\",\n  \"seatRows\": 8,\n  \"seatsPerRow\": 10,\n  \"roomStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/rooms",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.09 [F4] POST /api/rooms – Tạo Room thứ 2 (Standard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo room 2 → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set('room2Id', String(body.roomId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"Room Standard MSS301\",\n  \"roomType\": \"STANDARD\",\n  \"seatRows\": 5,\n  \"seatsPerRow\": 10,\n  \"roomStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/rooms",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.10 [F4] POST /api/rooms – Room MAINTENANCE (để test BR04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo room maintenance → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('roomMaintenanceId', String(pm.response.json().roomId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"Room Maintenance MSS301\",\n  \"roomType\": \"STANDARD\",\n  \"seatRows\": 4,\n  \"seatsPerRow\": 8,\n  \"roomStatus\": \"MAINTENANCE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/rooms",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.11 [F4] GET /api/rooms – Danh sách (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/rooms",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.12 [F4] GET /api/rooms/{id} (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Có roomId', function() { pm.expect(pm.response.json().roomId).to.exist; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/rooms/{{roomId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F4.13 [F4] PUT /api/rooms/{id} – Cập nhật room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roomName\": \"Room IMAX MSS301 Updated\",\n  \"roomType\": \"IMAX\",\n  \"seatRows\": 8,\n  \"seatsPerRow\": 10,\n  \"roomStatus\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/rooms/{{roomId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F5 – Admin: Movie CRUD",
+      "item": [
+        {
+          "name": "F5.01 [F5] POST /api/movies – Tạo Movie NOW_SHOWING → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo movie → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có movieId', function() { pm.expect(body.movieId).to.exist; });",
+                  "pm.environment.set('movieId', String(body.movieId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Galaxy Rangers MSS301\",\n  \"description\": \"Phim sci-fi bom tấn\",\n  \"director\": \"Director Name\",\n  \"durationMinutes\": 120,\n  \"language\": \"Vietnamese\",\n  \"ageRating\": \"T13\",\n  \"releaseDate\": \"2026-09-01\",\n  \"genreId\": \"{{genreId}}\",\n  \"movieStatus\": \"NOW_SHOWING\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.02 [F5] POST /api/movies – Tạo Movie thứ 2 (để test report)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo movie 2 → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('movie2Id', String(pm.response.json().movieId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Ngoi Nha Ma Am MSS301\",\n  \"description\": \"Phim kinh di Viet Nam\",\n  \"director\": \"Director 2\",\n  \"durationMinutes\": 95,\n  \"language\": \"Vietnamese\",\n  \"ageRating\": \"T16\",\n  \"releaseDate\": \"2026-08-01\",\n  \"genreId\": \"{{genre2Id}}\",\n  \"movieStatus\": \"NOW_SHOWING\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.03 [F5] POST /api/movies – Movie ENDED (để test BR04)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo movie ENDED → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('movieEndedId', String(pm.response.json().movieId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Phim Da Ket Thuc MSS301\",\n  \"description\": \"Movie ENDED test\",\n  \"director\": \"Director\",\n  \"durationMinutes\": 90,\n  \"language\": \"Vietnamese\",\n  \"ageRating\": \"P\",\n  \"releaseDate\": \"2025-01-01\",\n  \"genreId\": \"{{genreId}}\",\n  \"movieStatus\": \"ENDED\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.04 [VALIDATION] POST /api/movies thiếu title → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Thiếu title → 400', function() { pm.response.to.have.status(400); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"\",\n  \"durationMinutes\": 90,\n  \"genreId\": \"{{genreId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.05 [F5] GET /api/movies – Danh sách (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.06 [F5] GET /api/movies?keyword= – Tìm theo tên",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies?keyword=Galaxy",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"],
+              "query": [{"key": "keyword", "value": "Galaxy"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.07 [F5] GET /api/movies?genreId= – Lọc theo genre",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies?genreId={{genreId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"],
+              "query": [{"key": "genreId", "value": "{{genreId}}"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.08 [F5] GET /api/movies?status=NOW_SHOWING – Lọc theo status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies?status=NOW_SHOWING",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"],
+              "query": [{"key": "status", "value": "NOW_SHOWING"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.09 [F5] GET /api/movies/{id} – Chi tiết (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Title chứa Galaxy', function() { pm.expect(body.title).to.include('Galaxy'); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies/{{movieId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies", "{{movieId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.10 [F5] GET /api/movies/{id} không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Movie không tồn tại → 404', function() { pm.response.to.have.status(404); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/movies/99999999",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies", "99999999"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.11 [F5] PUT /api/movies/{id} – Cập nhật Movie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Galaxy Rangers MSS301 Extended\",\n  \"description\": \"Phim sci-fi bom tấn (bản mở rộng)\",\n  \"director\": \"Director Name\",\n  \"durationMinutes\": 135,\n  \"language\": \"Vietnamese\",\n  \"ageRating\": \"T13\",\n  \"releaseDate\": \"2026-09-01\",\n  \"genreId\": \"{{genreId}}\",\n  \"movieStatus\": \"NOW_SHOWING\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies/{{movieId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies", "{{movieId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F5.12 [GATEWAY] Customer gọi POST /api/movies → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Customer tạo movie → 403', function() { pm.response.to.have.status(403); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hack Movie\",\n  \"durationMinutes\": 90,\n  \"genreId\": \"{{genreId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/movies",
+              "host": ["{{gateway}}"],
+              "path": ["api", "movies"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F6 – Admin: Showtime CRUD (BR04, BR05, BR06)",
+      "item": [
+        {
+          "name": "F6.01 [F6] POST /api/showtimes – Tạo Showtime 1 (far future) → 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Tạo startTime 7 ngày sau từ bây giờ",
+                  "var d = new Date();",
+                  "d.setDate(d.getDate() + 7);",
+                  "d.setHours(14, 0, 0, 0);",
+                  "var pad = n => String(n).padStart(2,'0');",
+                  "var fmt = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00';",
+                  "pm.environment.set('showtime1Start', fmt);",
+                  "// futureDate cho filter",
+                  "pm.environment.set('futureDate', d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()));"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo showtime → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có showtimeId', function() { pm.expect(body.showtimeId).to.exist; });",
+                  "pm.test('Status là SCHEDULED', function() { pm.expect(body.showtimeStatus).to.eql('SCHEDULED'); });",
+                  "pm.environment.set('showtimeId', String(body.showtimeId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"{{showtime1Start}}\",\n  \"ticketPrice\": 95000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.02 [F6] POST /api/showtimes – Tạo Showtime 2 (movie 2, room 2, far future) → 201",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var d = new Date();",
+                  "d.setDate(d.getDate() + 14);",
+                  "d.setHours(19, 0, 0, 0);",
+                  "var pad = n => String(n).padStart(2,'0');",
+                  "var fmt = d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':00:00';",
+                  "pm.environment.set('showtime2Start', fmt);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Tạo showtime 2 → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('showtime2Id', String(pm.response.json().showtimeId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movie2Id}}\",\n  \"roomId\": \"{{room2Id}}\",\n  \"startTime\": \"{{showtime2Start}}\",\n  \"ticketPrice\": 75000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.03 [F6] Tạo Showtime khác phòng cùng giờ → OK 201 (không conflict)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Cùng giờ khác phòng → 201 (hợp lệ)', function() {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.environment.set('showtime3Id', String(pm.response.json().showtimeId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movie2Id}}\",\n  \"roomId\": \"{{room2Id}}\",\n  \"startTime\": \"{{showtime1Start}}\",\n  \"ticketPrice\": 75000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.04 [BR05] Tạo Showtime trùng giờ cùng phòng → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR05 – Trùng giờ cùng phòng → 409', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movie2Id}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"{{showtime1Start}}\",\n  \"ticketPrice\": 80000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.05 [BR04] Tạo Showtime với Movie ENDED → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR04 – Movie ENDED không tạo được showtime → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieEndedId}}\",\n  \"roomId\": \"{{room2Id}}\",\n  \"startTime\": \"{{showtime2Start}}\",\n  \"ticketPrice\": 50000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.06 [BR04] Tạo Showtime với Room MAINTENANCE → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR04 – Room MAINTENANCE không tạo được showtime → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"roomId\": \"{{roomMaintenanceId}}\",\n  \"startTime\": \"{{showtime2Start}}\",\n  \"ticketPrice\": 50000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.07 [BR04] Tạo Showtime StartTime trong quá khứ → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR04 – StartTime quá khứ → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"roomId\": \"{{room2Id}}\",\n  \"startTime\": \"2020-01-01T10:00:00\",\n  \"ticketPrice\": 50000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.08 [F6] GET /api/showtimes – Danh sách (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.09 [F6] GET /api/showtimes?movieId= – Lọc theo movie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes?movieId={{movieId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"],
+              "query": [{"key": "movieId", "value": "{{movieId}}"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.10 [F6] GET /api/showtimes?date= – Lọc theo ngày",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes?date={{futureDate}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes"],
+              "query": [{"key": "date", "value": "{{futureDate}}"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.11 [F6] GET /api/showtimes/{id} – Chi tiết (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có showtimeId', function() { pm.expect(body.showtimeId).to.exist; });",
+                  "pm.test('Có seatRows', function() { pm.expect(body.seatRows).to.exist; });",
+                  "pm.test('Có ticketPrice', function() { pm.expect(body.ticketPrice).to.exist; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes/{{showtimeId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes", "{{showtimeId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.12 [F6] PUT /api/showtimes/{id} – Cập nhật giá",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{adminToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"movieId\": \"{{movieId}}\",\n  \"roomId\": \"{{roomId}}\",\n  \"startTime\": \"{{showtime1Start}}\",\n  \"ticketPrice\": 100000\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/showtimes/{{showtimeId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes", "{{showtimeId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.13 [BR03] Xóa Genre đang có Movie → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR03 – Xóa Genre có Movie → 409', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/genres/{{genreId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "genres", "{{genreId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.14 [BR03] Xóa Room đang có Showtime → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR03 – Xóa Room có Showtime → 409', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/rooms/{{roomId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "rooms", "{{roomId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.15 [BR06] DELETE /api/showtimes/{id} → Soft cancel (CANCELLED) → 204",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR06 – Hủy showtime → 204', function() {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes/{{showtime3Id}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes", "{{showtime3Id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F6.16 [BR06] Verify showtime vừa hủy có status CANCELLED",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('BR06 – ShowtimeStatus là CANCELLED', function() {",
+                  "    pm.expect(body.showtimeStatus).to.eql('CANCELLED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/showtimes/{{showtime3Id}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "showtimes", "{{showtime3Id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F7 – Customer: Create Booking (BR07–BR10, BR14)",
+      "item": [
+        {
+          "name": "F7.01 [F7] GET /api/bookings/showtimes/{id}/seats – Seat map (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có totalSeats', function() { pm.expect(body.totalSeats).to.be.greaterThan(0); });",
+                  "pm.test('Có bookedSeats (array)', function() { pm.expect(Array.isArray(body.bookedSeats)).to.be.true; });",
+                  "pm.test('Có availableSeats', function() { pm.expect(body.availableSeats).to.exist; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/showtimes/{{showtimeId}}/seats",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "showtimes", "{{showtimeId}}", "seats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.02 [F7] POST /api/bookings – Đặt 2 vé → 201 (items format)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Đặt vé thành công → 201', function() { pm.response.to.have.status(201); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có bookingId', function() { pm.expect(body.bookingId).to.exist; });",
+                  "pm.test('Status là CONFIRMED', function() { pm.expect(body.bookingStatus).to.eql('CONFIRMED'); });",
+                  "pm.test('BR10 – totalPrice = 2 × ticketPrice (200000)', function() {",
+                  "    pm.expect(Number(body.totalPrice)).to.eql(200000);",
+                  "});",
+                  "pm.environment.set('bookingId', String(body.bookingId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"A1\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"A2\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.03 [F7] POST /api/bookings – Customer 2 đặt vé showtime 2 → 201",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Đặt vé customer 2 → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('booking2Id', String(pm.response.json().bookingId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customer2Token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtime2Id}}\", \"seatCode\": \"B1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.04 [BR09] Đặt ghế đã bán → 409",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR09 – Ghế đã bán → 409', function() {",
+                  "    pm.response.to.have.status(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customer2Token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"A1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.05 [BR08] Đặt ghế không tồn tại trong phòng → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR08 – Ghế không tồn tại → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"Z99\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.06 [BR08] Đặt vé showtime không tồn tại → 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR08 – Showtime không tồn tại → 404', function() {",
+                  "    pm.response.to.have.status(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"99999999\", \"seatCode\": \"A3\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.07 [BR08] Đặt vé showtime CANCELLED → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR08 – Showtime CANCELLED → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtime3Id}}\", \"seatCode\": \"A1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.08 [BR07] Trùng seatCode trong cùng request → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR07 – Trùng ghế trong request → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"C1\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"C1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.09 [BR07] Đặt quá 8 vé → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR07 – Quá 8 vé → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D1\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D2\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D3\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D4\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D5\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D6\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D7\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D8\" },\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"D9\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.10 [AUTH] Đặt vé không có token → 401",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Không có token → 401', function() {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtimeId}}\", \"seatCode\": \"E1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F7.11 [F7] Verify seat map sau khi đặt: A1, A2 là booked",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('A1 và A2 nằm trong bookedSeats', function() {",
+                  "    pm.expect(body.bookedSeats).to.include('A1');",
+                  "    pm.expect(body.bookedSeats).to.include('A2');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/showtimes/{{showtimeId}}/seats",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "showtimes", "{{showtimeId}}", "seats"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F8 – Customer: History & Cancel (BR11, BR12)",
+      "item": [
+        {
+          "name": "F8.01 [F8] GET /api/bookings/my – Lịch sử của customer 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(body)).to.be.true; });",
+                  "pm.test('Lịch sử không rỗng', function() { pm.expect(body.length).to.be.greaterThan(0); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/my",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "my"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.02 [F8] GET /api/bookings/{id} – Chi tiết booking của customer 1",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('bookingId khớp', function() {",
+                  "    pm.expect(String(body.bookingId)).to.eql(pm.environment.get('bookingId'));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{bookingId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.03 [BR11] Customer 2 xem booking của Customer 1 → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR11 – Customer B xem booking A → 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customer2Token}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{bookingId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.04 [F8] Admin xem tất cả bookings",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin xem tất cả → 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Trả về array', function() { pm.expect(Array.isArray(pm.response.json())).to.be.true; });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.05 [GATEWAY] Customer gọi GET /api/bookings (Admin API) → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Customer gọi Admin API → 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.06 [BR11] Customer 2 hủy booking của Customer 1 → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR11 – Customer B hủy booking A → 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{customer2Token}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{bookingId}}/cancel",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{bookingId}}", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.07 [BR12] Customer 2 hủy booking của chính mình (trước 2h) → 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR12 – Hủy hợp lệ → 200', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Status → CANCELLED', function() {",
+                  "    pm.expect(body.bookingStatus).to.eql('CANCELLED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{customer2Token}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{booking2Id}}/cancel",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{booking2Id}}", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.08 [BR12] Hủy booking đã CANCELLED → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR12 – Hủy booking đã CANCELLED → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{customer2Token}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{booking2Id}}/cancel",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{booking2Id}}", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.09 [F8] Verify seat map sau khi hủy: B1 được giải phóng",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('B1 được giải phóng, không nằm trong bookedSeats', function() {",
+                  "    pm.expect(body.bookedSeats).to.not.include('B1');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/showtimes/{{showtime2Id}}/seats",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "showtimes", "{{showtime2Id}}", "seats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.10 [F8] Đặt lại ghế B1 đã được giải phóng → 201 (Success)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Đặt lại ghế sau hủy → 201', function() { pm.response.to.have.status(201); });",
+                  "pm.environment.set('booking3Id', String(pm.response.json().bookingId));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{customerToken}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    { \"showtimeId\": \"{{showtime2Id}}\", \"seatCode\": \"B1\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{gateway}}/api/bookings",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.11 [F8] Admin hủy booking bất kỳ lúc nào → 200 (BR12: Admin override)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin hủy booking → 200', function() { pm.response.to.have.status(200); });",
+                  "pm.test('Status → CANCELLED', function() {",
+                  "    pm.expect(pm.response.json().bookingStatus).to.eql('CANCELLED');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{bookingId}}/cancel",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{bookingId}}", "cancel"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F8.12 [F8] Admin xem booking của customer (Auth endpoint)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin xem chi tiết booking → 200', function() { pm.response.to.have.status(200); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/{{bookingId}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "{{bookingId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "F9 – Admin: Report Statistic (BR13)",
+      "item": [
+        {
+          "name": "F9.01 [F9] GET /api/bookings/report – Báo cáo theo kỳ (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('Có totalBookings', function() { pm.expect(body.totalBookings).to.exist; });",
+                  "pm.test('Có totalTickets', function() { pm.expect(body.totalTickets).to.exist; });",
+                  "pm.test('Có totalRevenue', function() { pm.expect(body.totalRevenue).to.exist; });",
+                  "pm.test('Có revenueByMovie (array)', function() { pm.expect(Array.isArray(body.revenueByMovie)).to.be.true; });",
+                  "pm.test('Có bookings (array)', function() { pm.expect(Array.isArray(body.bookings)).to.be.true; });",
+                  "pm.test('BR13 – Booking CANCELLED không tính: bookings chỉ CONFIRMED', function() {",
+                  "    if (body.bookings && body.bookings.length > 0) {",
+                  "        body.bookings.forEach(function(b) {",
+                  "            pm.expect(b.bookingStatus).to.eql('CONFIRMED');",
+                  "        });",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/report?startDate=2026-01-01&endDate=2028-12-31",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "report"],
+              "query": [
+                {"key": "startDate", "value": "2026-01-01"},
+                {"key": "endDate", "value": "2028-12-31"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9.02 [BR13] Report startDate > endDate → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('BR13 – startDate > endDate → 400', function() {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/report?startDate=2028-12-31&endDate=2026-01-01",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "report"],
+              "query": [
+                {"key": "startDate", "value": "2028-12-31"},
+                {"key": "endDate", "value": "2026-01-01"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9.03 [GATEWAY] Customer gọi Report → 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Customer gọi report → 403', function() {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{customerToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/report?startDate=2026-01-01&endDate=2028-12-31",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "report"],
+              "query": [
+                {"key": "startDate", "value": "2026-01-01"},
+                {"key": "endDate", "value": "2028-12-31"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9.04 [F9] Report trong kỳ hẹp – kiểm tra sort giảm dần",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "var today = new Date();",
+                  "var pad = n => String(n).padStart(2,'0');",
+                  "var todayStr = today.getFullYear()+'-'+pad(today.getMonth()+1)+'-'+pad(today.getDate());",
+                  "pm.environment.set('today', todayStr);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function() { pm.response.to.have.status(200); });",
+                  "var body = pm.response.json();",
+                  "pm.test('bookings sort giảm dần theo bookingDate', function() {",
+                  "    if (body.bookings && body.bookings.length > 1) {",
+                  "        for (var i = 0; i < body.bookings.length - 1; i++) {",
+                  "            pm.expect(new Date(body.bookings[i].bookingDate))",
+                  "                .to.be.at.least(new Date(body.bookings[i+1].bookingDate));",
+                  "        }",
+                  "    }",
+                  "});",
+                  "pm.test('revenueByMovie sort giảm dần theo revenue', function() {",
+                  "    if (body.revenueByMovie && body.revenueByMovie.length > 1) {",
+                  "        for (var i = 0; i < body.revenueByMovie.length - 1; i++) {",
+                  "            pm.expect(Number(body.revenueByMovie[i].revenue))",
+                  "                .to.be.at.least(Number(body.revenueByMovie[i+1].revenue));",
+                  "        }",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/report?startDate={{today}}&endDate={{today}}",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "report"],
+              "query": [
+                {"key": "startDate", "value": "{{today}}"},
+                {"key": "endDate", "value": "{{today}}"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "F9.05 [F9] GET /api/bookings/report – Thiếu startDate → 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Thiếu startDate → 400 hoặc 500', function() {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([400, 500]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{adminToken}}"}],
+            "url": {
+              "raw": "{{gateway}}/api/bookings/report?endDate=2028-12-31",
+              "host": ["{{gateway}}"],
+              "path": ["api", "bookings", "report"],
+              "query": [{"key": "endDate", "value": "2028-12-31"}]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
