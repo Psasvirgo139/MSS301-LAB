@@ -1,4 +1,4 @@
-package com.mss301.order_service;
+package com.mss301.order;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
