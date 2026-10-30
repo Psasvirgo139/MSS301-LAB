@@ -1,10 +1,10 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver_media
+    container_name: sqlserver_media_v2
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd123"
+      MSSQL_SA_PASSWORD: "sa"
     ports:
       - "1433:1433"
     restart: unless-stopped
